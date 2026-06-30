@@ -12,8 +12,8 @@ Current features:
 
 ## Runing the tests
 
-'''powershell
-$env:PYTHONPATH = "src"
+'''powershell  
+$env:PYTHONPATH = "src"  
 pytest
 
 ## Roadmap
