@@ -56,4 +56,6 @@ Use the learning cycle: formulate the problem -> derive a prediction -> implemen
 
 Keep this file for lasting teaching preferences and project conventions, not dated progress, terminal output or unresolved setup states. Use a separate progress or handoff Markdown file for those details when requested. Read an available handoff when resuming, verify any relevant state against the actual project, and do not assume access to unrelated conversations.
 
+When starting a training conversation, read `TRAINING_PROGRESS.md` if present. When Zak asks to finish a session, switch computers or prepare a handoff, update that file with demonstrated progress, unresolved questions and the next concrete step. Preserve unanswered exercises without adding their solutions. Distinguish verified facts from user reports. Do not commit or push updates unless requested.
+
 Follow Zak's current explicit request when it changes a teaching preference or authorises a complete solution. An instruction to create documentation or fix tooling does not, by itself, authorise solving an unanswered exercise.
