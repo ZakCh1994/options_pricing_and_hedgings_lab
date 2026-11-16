@@ -1,12 +1,12 @@
 # Quant training progress
 
-Last updated: 10 November 2026.
+Last updated: 16 November 2026.
 
 ## Current focus and next step
 
-**Current position:** the dice exercise and its Monte Carlo extension are complete for this learning stage. The next learning block is **one-period binomial pricing through replication**.
+**Current position:** Project 3 is in progress. One-period call/put replication, risk-neutral valuation and put–call parity have been covered with guidance. The two-period call example includes self-financing rebalancing and terminal-payoff checks. Zak is now generalising backward induction to multiple periods.
 
-**Next concrete step:** introduce a small two-state asset model and a European option, then ask Zak to calculate the two terminal option payoffs. No numerical problem has been assigned yet. Guide the replication argument afterwards, leaving the derivation and first implementation to him.
+**Next concrete step:** revisit the last cell of `notebooks/03_binomial_replication.ipynb`. Zak has created terminal `call_payoffs` and changed the loop bound to depend on input length. His `backward_step` still accepts stock prices and applies `call_payoff` inside. Help him revise it to accept option values and perform one weighted, discounted backward step. The reason for applying the payoff function only at expiry was just explained and needs confirmation through his attempt. Leave the implementation to Zak. Then reuse the function on its output until one initial value remains, comparing the two-period result with the existing replication example.
 
 Read `AGENTS.md` for lasting teaching preferences. This file records project progress and handoff context; it is not a full conversation transcript. Verify relevant project state before relying on historical notes.
 
@@ -108,20 +108,53 @@ Source and saved outputs were reviewed; the assistant did not freshly execute th
 
 The repeated-experiment cell overwrites names such as `simulated_mean` and `lower_bound` from the earlier single-run cell. Rerun the relevant cell before reusing its results. The initial trading conclusion retains informal long-run wording; the discussion distinguished negative expectation from certain finite-sample loss.
 
-## Project 3: One-period binomial pricing and replication
+## Project 3: Binomial pricing, replication and backward induction
 
-**Status:** planned; not started. Recorded as the next direction on **10 November 2026**. No numerical exercise, solution or implementation has been assigned.
+**Status:** in progress. The one-period and explicit two-period examples have been worked through with guidance. General multi-period implementation remains unfinished.
 
-**Aim:** derive a European option's no-arbitrage price by matching its terminal payoffs with asset and cash holdings, then connect replication to risk-neutral probabilities.
+**Aim:** connect statewise replication, no-arbitrage pricing, risk-neutral valuation and dynamic hedging, then implement backward induction for a recombining tree.
 
-**Planned teaching sequence:**
+**Files:** `notebooks/03_binomial_replication.ipynb`, reusing `src/options_lab/payoffs.py`. Pricing functions and exploratory checks currently live in the notebook.
 
-1. Introduce one asset with two possible terminal prices, a European option and a cash account with a stated growth factor. State timing, units, no dividends, frictionless trading and permitted borrowing/lending and short selling. Both states are possible; choose numbers satisfying the no-arbitrage condition.
-2. Ask Zak to calculate the option's two terminal payoffs. This is the next concrete task; keep it small.
-3. Guide him to match both payoffs with asset and cash holdings and interpret their initial cost. Leave the algebra and first implementation to him.
-4. Introduce risk-neutral probabilities after replication. Distinguish no-arbitrage pricing from real-world expected-payoff and expected-profit calculations.
+### Established work, recorded 13 November 2026
 
-Reuse existing payoff functions when useful. No new notebook or module has been created for this block; create files when the lesson warrants them.
+These notes summarise the intervening training discussions and notebook reviews. Individual earlier session dates were not recorded here.
+
+- Used a practice model with stock price EUR 100, terminal prices EUR 120/80, strike EUR 100 and cash growth factor `R=1.05`. Assumptions include no dividends, frictionless trading, fractional shares, short selling and borrowing/lending at the same rate. Both states are possible.
+- Derived call replication with delta `0.5`, cash `-800/21` euros and initial price `250/21`, approximately EUR 11.904762. Negative cash denotes borrowing. Worked through arbitrage cash flows for both an underpriced and an overpriced call.
+- Distinguished stock price, strike, option premium, terminal payoff and financing cost. Matching both state payoffs determines the replication cost independently of real-world state probabilities.
+- Derived risk-neutral up weight `q=(R*S_0-S_d)/(S_u-S_d)=5/8` and the discounted weighted-payoff price. Zak showed algebraically that this equals the replicating portfolio cost. Discussed real-world expected payoff EUR 16 with up probability 80%, and the strict no-arbitrage condition `S_d < R*S_0 < S_u`, including stock/cash arbitrage when it fails.
+- Wrote one-period call and put pricing functions and a general `replicate_one_period` function. Its tuple contains delta, cash, q, replication price and risk-neutral price, in that order. Assertions check both state payoffs and agreement of pricing methods.
+- Explored call strike EUR 110 and a strike above both terminal prices. Derived put delta `-0.5`, cash `60/1.05` euros and price approximately EUR 7.142857. Checked put–call parity `C_0-P_0=S_0-K/R` with `np.isclose`, discussing floating-point rounding.
+- Resolved notebook imports using the existing source-path setup. Practised retaining full function results, tuple indexing and execution order. A running kernel previously masked a variable used before assignment, which was subsequently reordered.
+
+### Two-period replication and hedging, reviewed 13 November 2026
+
+- Extended the model with `u=1.2`, `d=0.8` and `R=1.05` per period, European expiry at `t=2`. Terminal stock prices are EUR 64, 96 and 144, with call payoffs EUR 0, 0 and 44.
+- Worked backwards from final payoffs to continuing option values at `t=1`. Up-node value is approximately EUR 26.190476 and down-node value is zero. Reinforced why immediate exercise value EUR 20 at the up node is different from the continuing European option value.
+- Calculated initial price approximately EUR 15.589569 and checked against `44*q**2/R**2`. Initial delta is approximately 0.654762 and cash approximately EUR -49.886621. After an up move, delta is `11/12` and cash approximately EUR -83.809524. After a down move, both holdings are zero.
+- Verified self-financing rebalancing in both states with assertions. Buying approximately 0.261905 extra shares after an up move requires additional borrowing. After a down move, selling the initial shares raises approximately EUR 52.380952, exactly repaying the accrued loan.
+- Checked up–down and up–up terminal portfolio values against call payoffs, using the rebalanced cash position. Saved execution count 20 showed no errors and price output EUR 15.590. Zero holdings after the first down move explain zero terminal payoffs along both remaining paths.
+
+### Current multi-period attempt and open learning point, 13 November 2026
+
+- Generated the `n+1` terminal stock prices in ascending order using a list comprehension with `S_0*u**k*d**(n-k)`. Correctly paired neighbouring children in a discounted risk-neutral calculation.
+- For `n=3`, reviewed saved output `[0, 9.04761905, 48.76190476]` for the three option values at `t=2`. Discussed shrinking layers `4 -> 3 -> 2 -> 1` and constant `q=(R-d)/(u-d)` when multipliers and the cash growth factor are the same at every node.
+- Introduced NumPy slices `[:-1]` and `[1:]` for neighbouring pairs. Zak currently uses a list comprehension, which can remain while he consolidates the calculation.
+- Latest saved cell uses `n=2`, creates `stock_prices` and a separate `call_payoffs` array, and bounds the function's loop with `len(stock_prices)-1`. The function still applies `call_payoff` internally and is still called with stock prices. Revision to operate directly on option values is pending.
+- Explained why applying the payoff function to a continuing option value would lose that value. Terminal payoffs are calculated once, then every backward step weights and discounts the resulting child option values. Zak asked for this explanation immediately before ending the session, so understanding remains to be checked through his implementation.
+- Latest cell has a null execution count with retained output `[0, 26.19047619]` and terminal payoffs `[0, 0, 44]`. Treat that output as retained evidence, not fresh verification of the current source. No complete multi-period pricer has been implemented or verified.
+
+### Session resumed, 16 November 2026
+
+- Confirmed that the 13 November handoff was saved and includes the one-period theory, two-period replication, self-financing checks and unfinished multi-period function.
+- Reinspected the last notebook cell after Zak reported a computer shutdown. The saved implementation remains at the pending revision described above. No new completed calculation or demonstrated understanding has been recorded since that handoff.
+- Restated the immediate task: make `backward_step` accept child option values, use the input length for neighbouring pairs, and apply it first to `call_payoffs` and then to its own result. With the current `n=2`, array lengths should shrink `3 -> 2 -> 1`, with the final value checked against the earlier two-period replication price.
+- Supplied terminal commands to stage the notebook and handoff, commit and push to `origin main`. Completion of those user-run commands has not been verified.
+
+### Verification and continuation
+
+The assistant reviewed notebook source and saved outputs, without freshly executing the notebook or pytest during this block. Save and rerun relevant cells when resuming, checking kernel state if behaviour differs. Continue with the pending `backward_step` revision before adding a loop over all periods. Keep the project open and preserve Zak's first implementation.
 
 ## Environment, verification and repository history
 
