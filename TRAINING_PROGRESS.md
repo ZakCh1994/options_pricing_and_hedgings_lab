@@ -1,12 +1,12 @@
 # Quant training progress
 
-Last updated: 16 November 2026.
+Last updated: 19 November 2026.
 
 ## Current focus and next step
 
-**Current position:** Project 3 is in progress. One-period call/put replication, risk-neutral valuation and put–call parity have been covered with guidance. The two-period call example includes self-financing rebalancing and terminal-payoff checks. Zak is now generalising backward induction to multiple periods.
+**Current position:** Project 3 is in progress. Zak has implemented reusable multi-period European call and put pricers in `notebooks/03_binomial_replication.ipynb`, using terminal payoffs and repeated backward induction. Saved assertions check the call against one- and two-period replication, the put against one-period replication, and three-period put–call parity. These establish the current valid-input examples. Input validation and a shared pricing engine remain to be developed.
 
-**Next concrete step:** revisit the last cell of `notebooks/03_binomial_replication.ipynb`. Zak has created terminal `call_payoffs` and changed the loop bound to depend on input length. His `backward_step` still accepts stock prices and applies `call_payoff` inside. Help him revise it to accept option values and perform one weighted, discounted backward step. The reason for applying the payoff function only at expiry was just explained and needs confirmation through his attempt. Leave the implementation to Zak. Then reuse the function on its output until one initial value remains, comparing the two-period result with the existing replication example.
+**Next concrete step:** compare `call_value_calculator` and `put_value_calculator`. They differ only in the terminal payoff calculation. Guide Zak to design one European pricing engine that receives a payoff function, leaving the first implementation to him. Introduce passing functions as arguments with a small separate example if needed. Preserve the existing numerical benchmarks. Then add model/input checks and boundary cases before extracting reusable code into a module. The proposed financial progression is to connect the tree to a fixed maturity, interest rate and volatility, study convergence, and later introduce American exercise. These extensions are unimplemented and can be reprioritised with Zak.
 
 Read `AGENTS.md` for lasting teaching preferences. This file records project progress and handoff context; it is not a full conversation transcript. Verify relevant project state before relying on historical notes.
 
@@ -110,7 +110,7 @@ The repeated-experiment cell overwrites names such as `simulated_mean` and `lowe
 
 ## Project 3: Binomial pricing, replication and backward induction
 
-**Status:** in progress. The one-period and explicit two-period examples have been worked through with guidance. General multi-period implementation remains unfinished.
+**Status:** in progress. One-period theory, explicit two-period hedging, multi-period European call/put implementations and selected benchmark/parity checks have been completed with guidance. Consolidation, input validation and extensions remain open.
 
 **Aim:** connect statewise replication, no-arbitrage pricing, risk-neutral valuation and dynamic hedging, then implement backward induction for a recombining tree.
 
@@ -141,9 +141,9 @@ These notes summarise the intervening training discussions and notebook reviews.
 - Generated the `n+1` terminal stock prices in ascending order using a list comprehension with `S_0*u**k*d**(n-k)`. Correctly paired neighbouring children in a discounted risk-neutral calculation.
 - For `n=3`, reviewed saved output `[0, 9.04761905, 48.76190476]` for the three option values at `t=2`. Discussed shrinking layers `4 -> 3 -> 2 -> 1` and constant `q=(R-d)/(u-d)` when multipliers and the cash growth factor are the same at every node.
 - Introduced NumPy slices `[:-1]` and `[1:]` for neighbouring pairs. Zak currently uses a list comprehension, which can remain while he consolidates the calculation.
-- Latest saved cell uses `n=2`, creates `stock_prices` and a separate `call_payoffs` array, and bounds the function's loop with `len(stock_prices)-1`. The function still applies `call_payoff` internally and is still called with stock prices. Revision to operate directly on option values is pending.
+- At the 13 November handoff, the saved cell used `n=2`, created `stock_prices` and a separate `call_payoffs` array, and bounded the function's loop with `len(stock_prices)-1`. The function still applied `call_payoff` internally and was called with stock prices. Revision to operate directly on option values was pending at that checkpoint.
 - Explained why applying the payoff function to a continuing option value would lose that value. Terminal payoffs are calculated once, then every backward step weights and discounts the resulting child option values. Zak asked for this explanation immediately before ending the session, so understanding remains to be checked through his implementation.
-- Latest cell has a null execution count with retained output `[0, 26.19047619]` and terminal payoffs `[0, 0, 44]`. Treat that output as retained evidence, not fresh verification of the current source. No complete multi-period pricer has been implemented or verified.
+- At that checkpoint, the cell had a null execution count with retained output `[0, 26.19047619]` and terminal payoffs `[0, 0, 44]`. No complete multi-period pricer had yet been implemented. Later progress is recorded below.
 
 ### Session resumed, 16 November 2026
 
@@ -152,9 +152,37 @@ These notes summarise the intervening training discussions and notebook reviews.
 - Restated the immediate task: make `backward_step` accept child option values, use the input length for neighbouring pairs, and apply it first to `call_payoffs` and then to its own result. With the current `n=2`, array lengths should shrink `3 -> 2 -> 1`, with the final value checked against the earlier two-period replication price.
 - Supplied terminal commands to stage the notebook and handoff, commit and push to `origin main`. Completion of those user-run commands has not been verified.
 
-### Verification and continuation
+### Guided function revision, 16 November 2026
 
-The assistant reviewed notebook source and saved outputs, without freshly executing the notebook or pytest during this block. Save and rerun relevant cells when resuming, checking kernel state if behaviour differs. Continue with the pending `backward_step` revision before adding a loop over all periods. Keep the project open and preserve Zak's first implementation.
+- Zak requested stronger guidance through hints, including for individual code replacements. Updated `AGENTS.md` with that primary teaching instruction. Keep exercise implementation with Zak unless he explicitly requests direct code or a solution.
+- Worked through function parameters versus global variables, input versus output arrays, and terminal stock prices versus option payoffs versus continuing option values. Needed several concrete examples before correctly using the supplied `values` array throughout `backward_step`.
+- Established overlapping neighbouring pairs. An array of length `m` has `m-1` pairs. Corrected the proposed `m/2` count, reliance on global `n` and global `stock_prices`, and accidental reapplication of `call_payoff` inside the backward step.
+- Completed `backward_step(values, q, R)` using a list comprehension over `len(values)-1`. Zak recognised that each output layer supplies the next call's input. Continued from terminal `call_payoffs`, preserving ascending stock-price order and weights `(1-q)` for the lower child and `q` for the upper child.
+
+### Repeated backward induction and interpretation, 17 November 2026
+
+- Wrote a while-loop starting from `call_payoffs.copy()`. Initially continued while at least one entry remained and produced an empty array after reaching the initial price. Corrected the condition to `len(current_values) >= 2`, stopping at one entry.
+- Reviewed the two-period result EUR 15.58956916 and its assertion against the explicit replication result. Renamed the evolving array `current_values`, then discussed returning its single entry.
+- Explained copying versus rebinding. The current backward step returns a new array, so assigning it to `current_values` preserves the terminal payoff array even without `.copy()`. A copy creates independent storage if entries are subsequently modified in place.
+- Discussed how the assumed stock dynamics enter pricing, exact replication within the model, volatility and implied volatility, and practical hedging limitations. This was conceptual discussion, with primary-source references, rather than a new implementation. Reinforce understanding through later applications.
+- Explained that increasing `n` while holding per-period `u`, `d` and `R` fixed lengthens the horizon. Refining a fixed maturity requires adjusting the per-period parameters. A saved exploratory `n=10` run, reviewed on 19 November, ended at approximately EUR 44.69179528. That run was not independently benchmarked.
+
+### Reusable pricers and multi-period parity, 19 November 2026
+
+- Verified a saved one-period loop result of EUR 11.90476190 and the matching earlier call price. Derived `q` from `q*S_u+(1-q)*S_d=R*S_0` and recognised that substituting stock multipliers removes `S_0` from the expression for `q`.
+- Designed `call_value_calculator(S_0, K, u, d, R, n)`. Corrected an initial omission of `K` from the arguments, which had left it dependent on notebook global state. The function calculates `q`, terminal prices/payoffs, repeatedly calls `backward_step`, and returns `current_values[0]` as a scalar.
+- Implemented `put_value_calculator` with the same inputs and backward induction, changing the terminal payoff to `put_payoff`. Both functions reuse the notebook's `backward_step` and imported payoff helpers.
+- Reviewed saved assertions comparing the call pricer at `n=1` with `Call_0`, the call at `n=2` with `C_0`, and the put at `n=1` with `Put_0`. These reference earlier replication examples. The naming of `C_0` still denotes the two-period example in this notebook.
+- Zak derived the borrowing amount `K/R**n` needed to repay `K` after `n` periods and implemented the multi-period parity check `C_0-P_0=S_0-K/R**n` for the same strike and maturity, under the existing no-dividend assumptions.
+- Latest saved pricing cell has execution count 14, no saved error, and three-period outputs approximately EUR 21.12352877659 for the call and EUR 7.50728862974 for the put. Its parity assertion compares the three-period price difference with `S_0-K/R**3`. Zak also reported that it passed. The assertion is mathematically correct for the current matching inputs; a broader parameter sweep has not been performed.
+
+### Verification, limitations and proposed continuation
+
+The assistant reviewed notebook source and saved outputs, without freshly executing the notebook or pytest during this block. Save and rerun relevant cells when resuming, checking kernel state if behaviour differs. The latest assertions depend on earlier notebook benchmark variables, so execution order still matters.
+
+The two pricing functions duplicate the same tree and induction logic. They currently assume valid inputs and do not enforce the no-arbitrage condition, positive stock/cash parameters or an integer step count. Boundary cases such as expiry at `n=0` have not been explicitly checked. Keep per-period `R` distinct from an annual interest rate. American exercise, volatility-based tree construction, convergence tests, sensitivity analysis and calibration remain unimplemented.
+
+Suggested next sequence is a shared European pricing engine with an explicit payoff input, validation and independent boundary checks, then a fixed-maturity volatility-based tree. Discuss each step's purpose and leave the first implementation to Zak. Module extraction and automated tests can follow the established notebook behaviour. This is a proposed progression rather than a fixed syllabus.
 
 ## Environment, verification and repository history
 
