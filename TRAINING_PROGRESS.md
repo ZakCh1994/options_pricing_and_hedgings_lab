@@ -6,7 +6,7 @@ Last updated: 22 November 2026.
 
 **Current position:** Project 4, a synthetic option portfolio spot-shock interview practice case, has been integrated into this repository as `notebooks/04_option_portfolio_spot_shock.ipynb`, with CSVs under `data/04_option_portfolio_spot_shock/`. Matching, trade-level scenario P&L, grouped sums and the covered-position total are implemented. The case is not complete: the current coverage printout counts excluded trades but labels them covered. This is explicitly flagged in the notebook. Preserve the remaining exercises for Zak.
 
-**Next concrete step:** guide Zak to correct the covered-trade count using the trade-level table and report it against the original trade count. Then complete an explicit missing-trade list, an independent hand calculation, a duplicate/missing-match diagnostic and the short risk explanation. His existing formula-agreement assertion repeats the calculation and is not an independent benchmark.
+**Next concrete step:** guide Zak to correct the covered-trade count using the trade-level table and report it against the original trade count. Then complete an explicit missing-trade list, an independent hand calculation, a duplicate/missing-match diagnostic and the short risk explanation. Zak has added a formula-agreement assertion for `scenario_PnL`; it checks consistency with an expanded calculation using the same DataFrame inputs, not an independent benchmark. The detailed Project 4 checklist below separates this completed check from the outstanding deliverables.
 
 **Project 3 continuity:** multi-period European call/put pricers and benchmark/parity assertions remain in `notebooks/03_binomial_replication.ipynb`. The proposed next step is still a shared payoff-driven pricing engine, followed by input validation and boundary cases. Fixed-maturity trees, convergence and American exercise remain unimplemented.
 
@@ -195,10 +195,30 @@ Suggested next sequence is a shared European pricing engine with an explicit pay
 - Practised DataFrame/Series selection, positional versus label indexing, NumPy conversion, array accumulation, and column assignment.
 - Removed identical market rows, retained trade rows with a left merge on underlying, and enforced many-to-one market keys.
 - Calculated per-trade spot-shock P&L, grouped by underlying using `sum(min_count=1)`, and calculated a covered-position total. Missing P&L remains distinct from zero.
+- Zak added `PnL_check`, calculating the formula explicitly for each trade, and `assert np.allclose(PnL, PnL_check, equal_nan=True)`. This is a completed consistency check of `scenario_PnL`, including agreement on missing results. It is useful but shares the same DataFrame inputs and formula, so cannot independently establish correct matching, units or financial interpretation.
 - Coverage reporting remains incorrect: the printed expression currently counts excluded trades. The independent hand calculation and final interpretation are still open; no solutions were added during migration.
 - Calculation cells were preserved. Migration added a problem statement/status, repository-relative data loading, portable kernel metadata, pandas/tzdata requirements and README links. Original CSV bytes were retained, including the duplicate used by the exercise.
 
 **Fresh verification on 22 November 2026:** all code cells in Projects 1–4 executed successfully in separate fresh Python 3.13 kernels from `notebooks/`; Project 4 additionally executed from the repository root. Project 4 outputs were refreshed. All seven existing pytest tests passed, and `pip check` reported no broken requirements. These execution checks do not establish completion of the remaining exercise deliverables. Earlier notebook outputs were not rewritten by these checks.
+
+### Deliverable audit after integration
+
+The saved canonical notebook was inspected again at Zak's request. Its calculation cell includes the assertion above and saved outputs without an error. No fresh notebook execution or pytest run was performed for this documentation-only update; the execution results above belong to the integration checks.
+
+| Requirement | Verified state and remaining work |
+| --- | --- |
+| Per-trade scenario P&L | Implemented and displayed in `positions_new`. |
+| One copy of each identical market record | Implemented with `.drop_duplicates()`; the original CSV deliberately retains its duplicate. |
+| List trades without market data | Missing values remain visible in the merged table, but a dedicated list of affected trade IDs is still needed. |
+| Net P&L by underlying | Implemented with `groupby`, `sum(min_count=1)` and `reset_index()`. |
+| Total for covered positions | Calculated and printed. It is a partial portfolio estimate, excluding unavailable P&Ls. |
+| Covered original trade count | Unresolved: subtraction currently counts excluded trades while the message says covered. Report the covered count against the original trade count. |
+| Check of `scenario_PnL` | The expanded-formula comparison and `np.allclose(..., equal_nan=True)` assertion are present. Preserve this work. |
+| Independent hand calculation | Still needed: one trade with original brief values substituted explicitly, plus a comparison with the calculated trade P&L. Python may perform the arithmetic, but calling the same function or rereading the same inputs alone is not an independent check. |
+| Explicit duplicate or missing-match check | Still needed: an expected-versus-observed example or assertion demonstrating the required behaviour. `validate="many_to_one"` is already a useful uniqueness guard, but the notebook does not yet demonstrate a specific duplicate/missing-match case. |
+| Short risk explanation | Still needed: Zak's two- or three-sentence explanation naming the largest loss contributor, what the total covers, and a limitation of the fixed-delta approximation. |
+
+The current Markdown introduces the problem, assumptions, deliverables and draft status. It does not yet contain a learner-written hand calculation or final risk explanation. Comments explaining calculation steps are present in the code. Do not treat introductory Markdown or those comments as completion of the final interpretation requirement. Leave the outstanding calculation and prose to Zak unless he explicitly requests a solution.
 
 ## Environment, verification and repository history
 
