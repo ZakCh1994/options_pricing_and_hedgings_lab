@@ -1,12 +1,14 @@
 # Quant training progress
 
-Last updated: 19 November 2026.
+Last updated: 22 November 2026.
 
 ## Current focus and next step
 
-**Current position:** Project 3 is in progress. Zak has implemented reusable multi-period European call and put pricers in `notebooks/03_binomial_replication.ipynb`, using terminal payoffs and repeated backward induction. Saved assertions check the call against one- and two-period replication, the put against one-period replication, and three-period put–call parity. These establish the current valid-input examples. Input validation and a shared pricing engine remain to be developed.
+**Current position:** Project 4, a synthetic option portfolio spot-shock interview practice case, has been integrated into this repository as `notebooks/04_option_portfolio_spot_shock.ipynb`, with CSVs under `data/04_option_portfolio_spot_shock/`. Matching, trade-level scenario P&L, grouped sums and the covered-position total are implemented. The case is not complete: the current coverage printout counts excluded trades but labels them covered. This is explicitly flagged in the notebook. Preserve the remaining exercises for Zak.
 
-**Next concrete step:** compare `call_value_calculator` and `put_value_calculator`. They differ only in the terminal payoff calculation. Guide Zak to design one European pricing engine that receives a payoff function, leaving the first implementation to him. Introduce passing functions as arguments with a small separate example if needed. Preserve the existing numerical benchmarks. Then add model/input checks and boundary cases before extracting reusable code into a module. The proposed financial progression is to connect the tree to a fixed maturity, interest rate and volatility, study convergence, and later introduce American exercise. These extensions are unimplemented and can be reprioritised with Zak.
+**Next concrete step:** guide Zak to correct the covered-trade count using the trade-level table and report it against the original trade count. Then complete an explicit missing-trade list, an independent hand calculation, a duplicate/missing-match diagnostic and the short risk explanation. His existing formula-agreement assertion repeats the calculation and is not an independent benchmark.
+
+**Project 3 continuity:** multi-period European call/put pricers and benchmark/parity assertions remain in `notebooks/03_binomial_replication.ipynb`. The proposed next step is still a shared payoff-driven pricing engine, followed by input validation and boundary cases. Fixed-maturity trees, convergence and American exercise remain unimplemented.
 
 Read `AGENTS.md` for lasting teaching preferences. This file records project progress and handoff context; it is not a full conversation transcript. Verify relevant project state before relying on historical notes.
 
@@ -183,6 +185,20 @@ The assistant reviewed notebook source and saved outputs, without freshly execut
 The two pricing functions duplicate the same tree and induction logic. They currently assume valid inputs and do not enforce the no-arbitrage condition, positive stock/cash parameters or an integer step count. Boundary cases such as expiry at `n=0` have not been explicitly checked. Keep per-period `R` distinct from an annual interest rate. American exercise, volatility-based tree construction, convergence tests, sensitivity analysis and calibration remain unimplemented.
 
 Suggested next sequence is a shared European pricing engine with an explicit payoff input, validation and independent boundary checks, then a fixed-maturity volatility-based tree. Discuss each step's purpose and leave the first implementation to Zak. Module extraction and automated tests can follow the established notebook behaviour. This is a proposed progression rather than a fixed syllabus.
+
+## Project 4: Option portfolio under a spot shock
+
+**Status, 22 November 2026:** learner-written synthetic interview practice, in progress. This is not claimed to be an actual employer case. The former standalone interview-preparation notebook is now Project 4 in this repository.
+
+**Files:** `notebooks/04_option_portfolio_spot_shock.ipynb`, `data/04_option_portfolio_spot_shock/positions.csv`, and `data/04_option_portfolio_spot_shock/market.csv`.
+
+- Practised DataFrame/Series selection, positional versus label indexing, NumPy conversion, array accumulation, and column assignment.
+- Removed identical market rows, retained trade rows with a left merge on underlying, and enforced many-to-one market keys.
+- Calculated per-trade spot-shock P&L, grouped by underlying using `sum(min_count=1)`, and calculated a covered-position total. Missing P&L remains distinct from zero.
+- Coverage reporting remains incorrect: the printed expression currently counts excluded trades. The independent hand calculation and final interpretation are still open; no solutions were added during migration.
+- Calculation cells were preserved. Migration added a problem statement/status, repository-relative data loading, portable kernel metadata, pandas/tzdata requirements and README links. Original CSV bytes were retained, including the duplicate used by the exercise.
+
+**Fresh verification on 22 November 2026:** all code cells in Projects 1–4 executed successfully in separate fresh Python 3.13 kernels from `notebooks/`; Project 4 additionally executed from the repository root. Project 4 outputs were refreshed. All seven existing pytest tests passed, and `pip check` reported no broken requirements. These execution checks do not establish completion of the remaining exercise deliverables. Earlier notebook outputs were not rewritten by these checks.
 
 ## Environment, verification and repository history
 

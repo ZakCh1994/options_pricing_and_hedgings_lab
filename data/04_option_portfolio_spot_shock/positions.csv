@@ -1,0 +1,7 @@
+trade_id,underlying,signed_contracts,units_per_contract,delta
+T1,ALP,12,100,0.60
+T2,ALP,-5,100,0.40
+T3,BRV,8,50,-0.30
+T4,CEN,-7,100,-0.50
+T5,DOR,3,100,0.55
+T6,BRV,5,100,0.20
