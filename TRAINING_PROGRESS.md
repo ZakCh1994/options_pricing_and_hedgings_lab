@@ -1,12 +1,12 @@
 # Quant training progress
 
-Last updated: 24 November 2026.
+Last updated: 25 November 2026.
 
 ## Current focus and next step
 
-**Current position:** Project 4, the synthetic option portfolio spot-shock case, is complete as guided practice as of 24 November 2026. The notebook calculates per-trade and grouped P&L, reports five of six trades covered, identifies T5 as uncovered, and includes a risk explanation. At Zak's explicit request, his expanded-formula assertion was accepted in place of the written hand calculation. Do not reopen that requirement as outstanding.
+**Current position.** Project 5, the bond book under a yield curve twist, is in progress. Zak loaded the three input tables and wrote a loop that stores one Boolean mask per bond ID. The notebook shows the five B03 cash-flow rows selected with the stored mask. Bond pricing and scenario P&L remain open. Project 4 was completed as guided practice on 24 November.
 
-**Next concrete step:** agree the next training block with Zak. A short, unseen data-analysis case would assess transfer of the pandas skills practised here; this is a proposed next step, not an assigned exercise. Project 3 can instead resume from the continuation below. Project 4 has no remaining exercise blockers; optional presentation or code simplification is separate from completion. Continue to leave the first implementation to Zak and allow an uninterrupted attempt when practising interview conditions.
+**Next concrete step.** Rerun Project 5 from a fresh kernel and check that each stored mask selects only its own bond's cash flows. Then use a single bond to reason through which curve rate belongs to each payment date, and leave the first implementation to Zak.
 
 **Project 3 continuity:** multi-period European call/put pricers and benchmark/parity assertions remain in `notebooks/03_binomial_replication.ipynb`. The proposed next step is still a shared payoff-driven pricing engine, followed by input validation and boundary cases. Fixed-maturity trees, convergence and American exercise remain unimplemented.
 
@@ -223,6 +223,21 @@ On 24 November all saved Project 4 code cells were executed sequentially in a fr
 **Learning points to reinforce through future cases:** Series versus DataFrame; labels versus positions; function arguments versus globals; retaining returned results; matching by business key rather than row order; per-trade versus grouped counts; missing data versus zero P&L; and local sensitivity versus full repricing. Substantial step-by-step guidance was used, so completion does not establish independent pandas fluency under time pressure.
 
 **Optional tidy-up only:** the notebook still contains an obsolete Markdown reference to a coverage issue, although the reporting is now correct. Presentation, prose length and spelling, repeated calculations and the unused `Delta_S2` helper can be revisited if desired. These are not unfinished assignment requirements. Do not extend or rewrite Zak's exercise code without a new request.
+
+## Project 5: Bond book under a yield curve twist
+
+**Status, 25 November 2026.** In progress as synthetic interview practice. The case asks for base and shocked prices per bond, signed position P&L and total book P&L in euros. The model discounts per-bond cash flows using continuously compounded zero rates. Shocks are quoted in basis points at curve maturities, and each valuation uses linearly interpolated zero rates at the payment dates.
+
+**Files.** `notebooks/05_bond_book_yield_curve_twist.ipynb` and the three CSVs in `data/05_bond_book_yield_curve_twist/`.
+
+- Loaded and displayed positions, cash flows and curve inputs. Explored sorting and deduplicating payment dates. The resulting list describes distinct dates across the book, while each bond has its own schedule.
+- Practised distinguishing index labels from values in a column. Comparing `bond_id` with a specific ID creates a Boolean Series, and `.loc` uses that Series to select the matching rows.
+- Wrote a loop that stores each Boolean Series in a dictionary keyed by bond ID. The saved example retrieves the B03 mask and shows five rows for B03. Discussed why a dictionary supports lookup by ID and how assigning to distinct keys preserves earlier entries.
+- Sketched `bond_prices`, which attempts to sum discounted cash flows using aligned inputs and `np.exp`. The cell has no saved execution count. The draft does not yet take a cash-flow schedule and curve directly, and pricing has not been verified.
+
+**Still open.** Convert rate quotes and shocks to consistent units, build and interpolate the two curves, complete and verify the pricer, calculate the per-bond and book P&L, and explain the largest loss in terms of rate moves and position sign. The brief asks for an independently known pricing example and a zero-shock check. No timing result has been recorded.
+
+**Verification.** The saved notebook source and outputs were reviewed on 25 November. The mask cell shows the B03 output with a blank execution count. A fresh run of the current notebook is still due.
 
 ## Environment, verification and repository history
 
