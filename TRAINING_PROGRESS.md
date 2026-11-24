@@ -1,12 +1,12 @@
 # Quant training progress
 
-Last updated: 22 November 2026.
+Last updated: 24 November 2026.
 
 ## Current focus and next step
 
-**Current position:** Project 4, a synthetic option portfolio spot-shock interview practice case, has been integrated into this repository as `notebooks/04_option_portfolio_spot_shock.ipynb`, with CSVs under `data/04_option_portfolio_spot_shock/`. Matching, trade-level scenario P&L, grouped sums and the covered-position total are implemented. The case is not complete: the current coverage printout counts excluded trades but labels them covered. This is explicitly flagged in the notebook. Preserve the remaining exercises for Zak.
+**Current position:** Project 4, the synthetic option portfolio spot-shock case, is complete as guided practice as of 24 November 2026. The notebook calculates per-trade and grouped P&L, reports five of six trades covered, identifies T5 as uncovered, and includes a risk explanation. At Zak's explicit request, his expanded-formula assertion was accepted in place of the written hand calculation. Do not reopen that requirement as outstanding.
 
-**Next concrete step:** guide Zak to correct the covered-trade count using the trade-level table and report it against the original trade count. Then complete an explicit missing-trade list, an independent hand calculation, a duplicate/missing-match diagnostic and the short risk explanation. Zak has added a formula-agreement assertion for `scenario_PnL`; it checks consistency with an expanded calculation using the same DataFrame inputs, not an independent benchmark. The detailed Project 4 checklist below separates this completed check from the outstanding deliverables.
+**Next concrete step:** agree the next training block with Zak. A short, unseen data-analysis case would assess transfer of the pandas skills practised here; this is a proposed next step, not an assigned exercise. Project 3 can instead resume from the continuation below. Project 4 has no remaining exercise blockers; optional presentation or code simplification is separate from completion. Continue to leave the first implementation to Zak and allow an uninterrupted attempt when practising interview conditions.
 
 **Project 3 continuity:** multi-period European call/put pricers and benchmark/parity assertions remain in `notebooks/03_binomial_replication.ipynb`. The proposed next step is still a shared payoff-driven pricing engine, followed by input validation and boundary cases. Fixed-maturity trees, convergence and American exercise remain unimplemented.
 
@@ -188,7 +188,7 @@ Suggested next sequence is a shared European pricing engine with an explicit pay
 
 ## Project 4: Option portfolio under a spot shock
 
-**Status, 22 November 2026:** learner-written synthetic interview practice, in progress. This is not claimed to be an actual employer case. The former standalone interview-preparation notebook is now Project 4 in this repository.
+**Status, 24 November 2026:** complete as guided synthetic interview practice. This is not claimed to be an actual employer case or an independently completed timed assessment. The former standalone interview-preparation notebook was integrated as Project 4 on 22 November.
 
 **Files:** `notebooks/04_option_portfolio_spot_shock.ipynb`, `data/04_option_portfolio_spot_shock/positions.csv`, and `data/04_option_portfolio_spot_shock/market.csv`.
 
@@ -196,29 +196,33 @@ Suggested next sequence is a shared European pricing engine with an explicit pay
 - Removed identical market rows, retained trade rows with a left merge on underlying, and enforced many-to-one market keys.
 - Calculated per-trade spot-shock P&L, grouped by underlying using `sum(min_count=1)`, and calculated a covered-position total. Missing P&L remains distinct from zero.
 - Zak added `PnL_check`, calculating the formula explicitly for each trade, and `assert np.allclose(PnL, PnL_check, equal_nan=True)`. This is a completed consistency check of `scenario_PnL`, including agreement on missing results. It is useful but shares the same DataFrame inputs and formula, so cannot independently establish correct matching, units or financial interpretation.
-- Coverage reporting remains incorrect: the printed expression currently counts excluded trades. The independent hand calculation and final interpretation are still open; no solutions were added during migration.
+- Zak corrected the coverage calculation and reporting: five original trades are covered and one is not. His `uncovered(positions)` function returns `['T5']`. He corrected both the initial reliance on global `positions_new` and the mixing of index labels with positional `.iloc` selection; the final function uses its argument and positional indexing consistently.
+- Added a risk explanation identifying ALP as the largest net loss contributor, T5 as lacking market coverage, and fixed delta as a local approximation rather than full option repricing. The note now explicitly says delta is frozen in the approximation; this does not establish zero gamma for the actual options.
 - Calculation cells were preserved. Migration added a problem statement/status, repository-relative data loading, portable kernel metadata, pandas/tzdata requirements and README links. Original CSV bytes were retained, including the duplicate used by the exercise.
 
-**Fresh verification on 22 November 2026:** all code cells in Projects 1–4 executed successfully in separate fresh Python 3.13 kernels from `notebooks/`; Project 4 additionally executed from the repository root. Project 4 outputs were refreshed. All seven existing pytest tests passed, and `pip check` reported no broken requirements. These execution checks do not establish completion of the remaining exercise deliverables. Earlier notebook outputs were not rewritten by these checks.
+**Integration verification on 22 November 2026:** all code cells in Projects 1–4 executed successfully in separate fresh Python 3.13 kernels from `notebooks/`; Project 4 additionally executed from the repository root. Project 4 outputs were refreshed. All seven existing pytest tests passed, and `pip check` reported no broken requirements. Earlier notebook outputs were not rewritten by these checks. These are historical integration results, not newly rerun pytest results for the completed notebook.
 
-### Deliverable audit after integration
+### Completion review, 24 November 2026
 
-The saved canonical notebook was inspected again at Zak's request. Its calculation cell includes the assertion above and saved outputs without an error. No fresh notebook execution or pytest run was performed for this documentation-only update; the execution results above belong to the integration checks.
+On 23 November the assistant extracted the final `uncovered` definition and tested it in isolation without notebook globals. It passed independent examples with non-consecutive index labels and multiple missing P&Ls, no missing values including a valid zero, and an empty table. These diagnostic checks were executed externally; they were not added as notebook cells or automated test files.
 
-| Requirement | Verified state and remaining work |
+On 24 November all saved Project 4 code cells were executed sequentially in a fresh Python process from the repository root. This was a fresh execution of the code, not a Jupyter-kernel run, and it did not rewrite saved notebook outputs. Additional checks verified retained trade count, unique cleaned market keys, uncovered trade identification, covered count, total P&L and largest loss contributor. All passed. No fresh execution or pytest run was needed for the subsequent progress-file-only edit.
+
+| Requirement | Completion evidence |
 | --- | --- |
 | Per-trade scenario P&L | Implemented and displayed in `positions_new`. |
 | One copy of each identical market record | Implemented with `.drop_duplicates()`; the original CSV deliberately retains its duplicate. |
-| List trades without market data | Missing values remain visible in the merged table, but a dedicated list of affected trade IDs is still needed. |
-| Net P&L by underlying | Implemented with `groupby`, `sum(min_count=1)` and `reset_index()`. |
-| Total for covered positions | Calculated and printed. It is a partial portfolio estimate, excluding unavailable P&Ls. |
-| Covered original trade count | Unresolved: subtraction currently counts excluded trades while the message says covered. Report the covered count against the original trade count. |
-| Check of `scenario_PnL` | The expanded-formula comparison and `np.allclose(..., equal_nan=True)` assertion are present. Preserve this work. |
-| Independent hand calculation | Still needed: one trade with original brief values substituted explicitly, plus a comparison with the calculated trade P&L. Python may perform the arithmetic, but calling the same function or rereading the same inputs alone is not an independent check. |
-| Explicit duplicate or missing-match check | Still needed: an expected-versus-observed example or assertion demonstrating the required behaviour. `validate="many_to_one"` is already a useful uniqueness guard, but the notebook does not yet demonstrate a specific duplicate/missing-match case. |
-| Short risk explanation | Still needed: Zak's two- or three-sentence explanation naming the largest loss contributor, what the total covers, and a limitation of the fixed-delta approximation. |
+| List trades without market data | `uncovered(positions_new)` returns and prints `['T5']`. |
+| Net P&L by underlying | ALP: EUR -2,080; BRV: EUR 100; CEN: EUR 700; DOR: missing. Uses `groupby`, `sum(min_count=1)` and `reset_index()`. |
+| Total for covered positions | EUR -1,280, excluding unavailable P&L; this is not the total risk of all six trades. |
+| Covered original trade count | Five of six trades; one uncovered trade. |
+| Calculation check | `PnL_check` and `np.allclose(..., equal_nan=True)` compare expanded algebra with `scenario_PnL`. Accepted as the substitute for the written hand calculation at Zak's explicit request. This is a consistency check, not an independent pricing benchmark. |
+| Duplicate or missing-match check | `validate="many_to_one"` guards market-key uniqueness. Assistant-run independent missing-value cases and final retained-trade/uncovered-ID checks passed; no further learner-written diagnostic is required to close this exercise. |
+| Risk explanation | Present: names ALP, identifies T5 as missing market coverage and explains the fixed-delta approximation. |
 
-The current Markdown introduces the problem, assumptions, deliverables and draft status. It does not yet contain a learner-written hand calculation or final risk explanation. Comments explaining calculation steps are present in the code. Do not treat introductory Markdown or those comments as completion of the final interpretation requirement. Leave the outstanding calculation and prose to Zak unless he explicitly requests a solution.
+**Learning points to reinforce through future cases:** Series versus DataFrame; labels versus positions; function arguments versus globals; retaining returned results; matching by business key rather than row order; per-trade versus grouped counts; missing data versus zero P&L; and local sensitivity versus full repricing. Substantial step-by-step guidance was used, so completion does not establish independent pandas fluency under time pressure.
+
+**Optional tidy-up only:** the notebook still contains an obsolete Markdown reference to a coverage issue, although the reporting is now correct. Presentation, prose length and spelling, repeated calculations and the unused `Delta_S2` helper can be revisited if desired. These are not unfinished assignment requirements. Do not extend or rewrite Zak's exercise code without a new request.
 
 ## Environment, verification and repository history
 
