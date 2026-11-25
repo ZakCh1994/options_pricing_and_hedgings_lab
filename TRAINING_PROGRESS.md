@@ -4,9 +4,9 @@ Last updated: 25 November 2026.
 
 ## Current focus and next step
 
-**Current position.** Project 5, the bond book under a yield curve twist, is in progress. Zak can filter cash flows by bond ID, identify payment dates without an exact curve quote and find the nearest quoted maturity above each date. Interpolation, bond pricing and scenario P&L remain open. Project 4 was completed as guided practice on 24 November.
+**Current position.** Project 5, the bond book under a yield curve twist, is in progress. The base valuation is complete for all three bonds and independently verified. The discounting calculation for the first deliverable works. The function interface requested by the brief and its use for the shocked valuation remain open. Project 4 was completed as guided practice on 24 November.
 
-**Next concrete step.** Extend the existing loop to retrieve and inspect the lower curve row alongside the upper row for each missing payment date. Then check the draft interpolation at each endpoint and at an off-centre date before using it to price a bond.
+**Next concrete step.** Build the shocked zero curve at the quoted maturities, checking the basis-point conversion on one quote first. Then use the same pricing function for one bond under both curves before extending the results table to the whole book.
 
 **Project 3 continuity:** multi-period European call/put pricers and benchmark/parity assertions remain in `notebooks/03_binomial_replication.ipynb`. The proposed next step is still a shared payoff-driven pricing engine, followed by input validation and boundary cases. Fixed-maturity trees, convergence and American exercise remain unimplemented.
 
@@ -230,17 +230,21 @@ On 24 November all saved Project 4 code cells were executed sequentially in a fr
 
 **Files.** `notebooks/05_bond_book_yield_curve_twist.ipynb` and the three CSVs in `data/05_bond_book_yield_curve_twist/`.
 
-- Loaded and displayed positions, cash flows and curve inputs. Explored sorting and deduplicating payment dates. The resulting list describes distinct dates across the book, while each bond has its own schedule.
-- Practised distinguishing index labels from values in a column. Comparing `bond_id` with a specific ID creates a Boolean Series, and `.loc` uses that Series to select the matching rows.
-- Wrote a loop that stores each Boolean Series in a dictionary keyed by bond ID. The saved example retrieves the B03 mask and shows five rows for B03. Discussed why a dictionary supports lookup by ID and how assigning to distinct keys preserves earlier entries.
-- Sketched `bond_prices`, which attempts to sum discounted cash flows using aligned inputs and `np.exp`. The function is defined but has not been exercised with a bond schedule. The draft still needs to take a cash-flow schedule and curve directly.
-- Left-joined the cash flows to the curve on payment time to find dates without exact quotes. Selected the payment-year column before deduplicating so the 1.5-year cash flows for two different bonds share one interpolation input. The unique missing payment dates are 1.5 and 2.5 years.
-- Used `zip` to pair each payment-year value with its distance Series, built the `above` and `below` masks inside the loop, and used the filtered Series with `.idxmin()` and `.loc` to retrieve each upper curve row. The upper maturities are 2 and 3 years, respectively. The loop builds `below` but does not yet retrieve the lower curve rows. The debug prints after the loop reuse the last `above` mask with the first distance Series, so they do not show a matched pair.
-- Worked through why interpolation is needed between quoted maturities, how the weights change off the midpoint and how to put rate quotes and basis-point shocks in the same units. The intended scenario sequence is to apply the shocks at quoted maturities before interpolating. The draft `zero_rates_inter` passes the midpoint example but fails at the lower endpoint. Check the weights before connecting it to the pricer.
+- Left-joined the cash flows to the curve by payment year and identified the distinct missing dates, 1.5 and 2.5 years. The two 1.5-year cash flows share one interpolation input.
+- Used `zip` to pair each missing date with its distance Series. Retrieved both bounding curve rows using Boolean masks, `.idxmin()` and `.loc`. Fixed a repeated `above` mask that selected the same row twice and caused division by zero. Practised reading a selected row as a Series indexed by column name.
+- Corrected the weights in `linear_inter` after tracing the value returned at the lower endpoint. Both case dates are midpoints, where equal weights had hidden the error. The notebook interpolates base zero rates and basis-point shocks separately. Discussed why interpolation after adding the shocks at the quoted maturities gives the same result once the units agree.
+- Built a lookup with one row per missing date and left-merged it back into the cash flows. Practised naming Series and columns, interpreting merge suffixes, and using `.fillna()` with a fallback Series to preserve quoted values and fill interpolated ones. Retained `bond_id` and all nine cash-flow rows. Trimmed comments and corrected the explanation of the join key.
+- Stored each bond's Boolean mask in a dictionary keyed by `bond_id`. Implemented the discounting calculation in `bond_prices` for aligned amounts, decimal rates and payment times. Replaced `np.sum()` with Python's `sum()` for the generator and converted percentage quotes to decimal rates at the call site.
+- Collected dictionaries containing the bond ID and base price in a list to create `bond_prices_df`. The three bonds appear in ID order for the supplied data. The loop still prices each bond once per cash-flow row and deduplicates afterwards. As part of extending the table, iterate over distinct bond IDs and sort explicitly if the output should be ordered for arbitrary input.
 
-**Still open.** Convert rate quotes and shocks to consistent units, build and interpolate the two curves, complete and verify the pricer, calculate the per-bond and book P&L, and explain the largest loss in terms of rate moves and position sign. The brief asks for an independently known pricing example and a zero-shock check. No timing result has been recorded.
+**Still open.**
 
-**Verification, 25 November 2026.** All saved code cells ran sequentially in a fresh Python process. Separate checks confirmed both printed upper brackets and all three bond masks against their expected cash-flow rows. The draft interpolation returned 2.75 for the midpoint example and 3.0 at the lower endpoint, where the expected rate was 2.5. The notebook outputs were left as saved. No bond pricing or P&L results have been verified yet.
+1. Apply shocks at the quoted maturities with consistent units. Complete the brief's pricer interface so it takes a bond's cash-flow schedule and a curve directly, then use it for both base and shocked valuations. The current helper takes three Series with the rates already matched to payment dates.
+2. Extend the table with shocked prices and signed position P&L by `bond_id`, then report total book P&L in euros.
+3. Add the independently known pricing check to the notebook and add the zero-shock book P&L check.
+4. Write the two- or three-sentence Treasury explanation of the largest loss, using the rate moves and the position sign. No unaided attempt timing has been recorded.
+
+**Verification, 25 November 2026.** Ran all saved code cells sequentially in a fresh Python process. Independently checked both interpolation endpoints, an off-centre date and the rate and shock pairs for all nine cash-flow rows. Independent discounting matched the three base prices per bond in euros: B01 97.530991, B02 101.989544 and B03 105.070718. B01 provides the single-payment benchmark. These checks ran outside the notebook, and its saved outputs were left as they were. Shocked prices and P&L remain to be checked.
 
 ## Environment, verification and repository history
 
