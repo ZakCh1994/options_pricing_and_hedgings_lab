@@ -4,7 +4,7 @@ Last updated: 25 November 2026.
 
 ## Current focus and next step
 
-**Current position.** Project 5, the bond book under a yield curve twist, is in progress. The base valuation is complete for all three bonds and independently verified. The discounting calculation for the first deliverable works. The function interface requested by the brief and its use for the shocked valuation remain open. Project 4 was completed as guided practice on 24 November.
+**Current position.** Project 5, the bond book under a yield curve twist, is in progress. The three base prices are independently verified. The refactored base valuation also passed a 2,000-bond stress test, and the notebook rejects duplicate curve quotes and out-of-range payment dates. The function interface requested by the brief and the shocked valuation remain open. Project 4 was completed as guided practice on 24 November.
 
 **Next concrete step.** Build the shocked zero curve at the quoted maturities, checking the basis-point conversion on one quote first. Then use the same pricing function for one bond under both curves before extending the results table to the whole book.
 
@@ -228,14 +228,16 @@ On 24 November all saved Project 4 code cells were executed sequentially in a fr
 
 **Status, 25 November 2026.** In progress as synthetic interview practice. The case asks for base and shocked prices per bond, signed position P&L and total book P&L in euros. The model discounts per-bond cash flows using continuously compounded zero rates. Shocks are quoted in basis points at curve maturities, and each valuation uses linearly interpolated zero rates at the payment dates.
 
-**Files.** `notebooks/05_bond_book_yield_curve_twist.ipynb` and the three CSVs in `data/05_bond_book_yield_curve_twist/`.
+**Files.** `notebooks/05_bond_book_yield_curve_twist.ipynb`, the three case CSVs in `data/05_bond_book_yield_curve_twist/`, and the larger synthetic `cashflows.csv` and `curve.csv` in its `stress_test/` subdirectory.
 
 - Left-joined the cash flows to the curve by payment year and identified the distinct missing dates, 1.5 and 2.5 years. The two 1.5-year cash flows share one interpolation input.
 - Used `zip` to pair each missing date with its distance Series. Retrieved both bounding curve rows using Boolean masks, `.idxmin()` and `.loc`. Fixed a repeated `above` mask that selected the same row twice and caused division by zero. Practised reading a selected row as a Series indexed by column name.
 - Corrected the weights in `linear_inter` after tracing the value returned at the lower endpoint. Both case dates are midpoints, where equal weights had hidden the error. The notebook interpolates base zero rates and basis-point shocks separately. Discussed why interpolation after adding the shocks at the quoted maturities gives the same result once the units agree.
 - Built a lookup with one row per missing date and left-merged it back into the cash flows. Practised naming Series and columns, interpreting merge suffixes, and using `.fillna()` with a fallback Series to preserve quoted values and fill interpolated ones. Retained `bond_id` and all nine cash-flow rows. Trimmed comments and corrected the explanation of the join key.
-- Stored each bond's Boolean mask in a dictionary keyed by `bond_id`. Implemented the discounting calculation in `bond_prices` for aligned amounts, decimal rates and payment times. Replaced `np.sum()` with Python's `sum()` for the generator and converted percentage quotes to decimal rates at the call site.
-- Collected dictionaries containing the bond ID and base price in a list to create `bond_prices_df`. The three bonds appear in ID order for the supplied data. The loop still prices each bond once per cash-flow row and deduplicates afterwards. As part of extending the table, iterate over distinct bond IDs and sort explicitly if the output should be ordered for arbitrary input.
+- Replaced the dictionary of Boolean masks with `.groupby("bond_id")`. Practised distinguishing the `DataFrameGroupBy` object from the individual DataFrame it yields for each bond, and using `.get_group()` to inspect one schedule. The group supplies the three aligned Series for `bond_prices`. The bond ID and price go into one result dictionary, and the list of dictionaries becomes `bond_prices_df`. Each bond is priced once.
+- The pricer uses Python's `sum()` for the generator and converts percentage quotes to decimal rates inside the function. The rate inputs are already matched to the payment dates.
+- Replaced the per-date concatenation of two growing Series with a list of dictionaries, one per missing payment year. The lookup DataFrame is built once with named columns. Keeping those columns when the lookup has zero rows lets the same merge work when every date is already quoted.
+- Added `validate="many_to_one"` to the initial curve merge. Repeated payment dates on the cash-flow side are valid, and a duplicate maturity quote now raises a `MergeError` before it can multiply a cash-flow row. Added a range guard before interpolation. It combines two Boolean Series with `|` and uses `.any()` to raise a `ValueError` for dates below or above the quoted range. The bounds themselves are valid.
 
 **Still open.**
 
@@ -244,7 +246,9 @@ On 24 November all saved Project 4 code cells were executed sequentially in a fr
 3. Add the independently known pricing check to the notebook and add the zero-shock book P&L check.
 4. Write the two- or three-sentence Treasury explanation of the largest loss, using the rate moves and the position sign. No unaided attempt timing has been recorded.
 
-**Verification, 25 November 2026.** Ran all saved code cells sequentially in a fresh Python process. Independently checked both interpolation endpoints, an off-centre date and the rate and shock pairs for all nine cash-flow rows. Independent discounting matched the three base prices per bond in euros: B01 97.530991, B02 101.989544 and B03 105.070718. B01 provides the single-payment benchmark. These checks ran outside the notebook, and its saved outputs were left as they were. Shocked prices and P&L remain to be checked.
+**Verification, 25 November 2026.** Ran all saved code cells sequentially in a fresh Python process. Independent discounting matched the three base prices in euros per bond: B01 97.530991, B02 101.989544 and B03 105.070718. B01 provides the single-payment benchmark. Checked both interpolation endpoints, an off-centre date, the nine original rate and shock pairs, and the all-quoted case. Injecting a duplicate quote and testing dates just beyond either curve boundary raised the expected errors. These diagnostics ran outside the notebook.
+
+**Stress test, 25 November 2026.** The synthetic input has 71,602 cash flows across 2,000 bonds, 256 unsorted curve quotes and 2,445 distinct dates requiring interpolation. Both lookup versions preserved the input rows and matched `np.interp` for zero rates and shocks and an independent discounted sum for every base price. The median cell runtime over three runs was 36.1 s for the original lookup and 34.4 s for the revised lookup. A later run of the saved notebook with both guards passed on the same inputs in 18.9 s, excluding CSV loading and the reference calculation. That was a single run. Its maximum absolute base-price difference was about EUR 6.8e-13. The stress test covered base valuation and matched shocks. Shocked valuation and book P&L are still open.
 
 ## Environment, verification and repository history
 
