@@ -1,16 +1,35 @@
 # Quant training progress
 
-Last updated: 25 November 2026.
+Last updated: 26 November 2026.
 
 ## Current focus and next step
 
 **Current position.** Project 5, the bond book under a yield curve twist, is in progress. The three base prices are independently verified. The refactored base valuation also passed a 2,000-bond stress test, and the notebook rejects duplicate curve quotes and out-of-range payment dates. The function interface requested by the brief and the shocked valuation remain open. Project 4 was completed as guided practice on 24 November.
 
-**Next concrete step.** Build the shocked zero curve at the quoted maturities, checking the basis-point conversion on one quote first. Then use the same pricing function for one bond under both curves before extending the results table to the whole book.
+**Next drill session, 27 November.** Start Drill 3 with one short, unseen pandas task that revisits grouping and aggregation on different data. Give the prompt in plain English, allow an unaided attempt and review the saved answer in Zak’s local drill notebook.
+
+**Next bond-case step.** Build the shocked zero curve at the quoted maturities, checking the basis-point conversion on one quote first. Then use the same pricing function for one bond under both curves before extending the results table to the whole book.
 
 **Project 3 continuity:** multi-period European call/put pricers and benchmark/parity assertions remain in `notebooks/03_binomial_replication.ipynb`. The proposed next step is still a shared payoff-driven pricing engine, followed by input validation and boundary cases. Fixed-maturity trees, convergence and American exercise remain unimplemented.
 
 Read `AGENTS.md` for lasting teaching preferences. This file records project progress and handoff context; it is not a full conversation transcript. Verify relevant project state before relying on historical notes.
+
+## Case interview preparation, 26 November 2026
+
+Zak reported that Van Lanschot Kempen invited him to the case-interview stage and that the quant recruiter gave positive feedback on his previous interview. The recruiter advised him to read the forthcoming brochure thoroughly and brush up on Python syntax. The brochure is expected a few days before the interview. Once it arrives, use its details to prioritise preparation.
+
+Zak feels more confident reasoning through a case than recalling the Python syntax to implement his approach. He chose **chat-guided drills in a blank notebook** alongside the ongoing bond case and started on 26 November. He plans to use one notebook per drill under `notebooks/drills/`. Check his saved work there when he asks for a review. Git ignores that directory so the notebooks stay local to his workspace.
+
+- Give one short task in plain English. Let Zak type and run his first attempt unaided, then review where he got stuck. Distinguish a syntax lapse, such as combining Boolean masks, from uncertainty about an object, such as what the group in a `groupby` loop contains. For the latter, inspecting a small intermediate result helped him.
+- Start with core Python and pandas, particularly loop unpacking, collecting results, row and column selection, grouping, merging and missing values. Then mix in NumPy shapes, axes and elementwise operations, plus basic labelled line or scatter plots.
+- The suggested rhythm is 10–15 minutes on most days. Revisit difficult operations after a gap with different data, sometimes rebuilding a small piece of a previous case from memory. An occasional unfamiliar timed mini-case can check whether Zak can choose and combine the operations independently. Track unaided completion and recovery from errors.
+- A website similar to the arithmetic trainer remains an option to reconsider after trying the notebook format and seeing which operations need repetition.
+
+### First drill session, 26 November 2026
+
+- **Drill 1, position limits.** Completed with hints. Zak combined two row-wise Boolean masks, kept both boundary values within the limit and extracted the breached trade IDs in input order. Revisit when a comparison returns a Series, what wrapping it in a list does, and when to select a single column before converting to a Python list.
+- **Drill 2, net units by desk.** Completed with hints. Zak grouped the signed positions, retained the desk with a zero total and produced the two requested columns. Practised distinguishing a grouping column from one of its values, renaming a column and moving the group labels from the result index into a column. Discussed group counts and other aggregations. Independent recall remains to be checked.
+- **Verification.** Both exercises currently reside in the first local drill notebook. A fresh Python run confirmed the list and desk summary. A subsequent exploratory print calls `get_group` on the aggregated DataFrame and raises `AttributeError`. Both answers are computed correctly before that line. This distinction between a GroupBy object and its aggregated result is a useful point to revisit in Drill 3.
 
 ## Training direction
 
