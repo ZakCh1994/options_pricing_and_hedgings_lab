@@ -29,7 +29,7 @@ Zak feels more confident reasoning through a case than recalling the Python synt
 
 - **Drill 1, position limits.** Completed with hints. Zak combined two row-wise Boolean masks, kept both boundary values within the limit and extracted the breached trade IDs in input order. Revisit when a comparison returns a Series, what wrapping it in a list does, and when to select a single column before converting to a Python list.
 - **Drill 2, net units by desk.** Completed with hints. Zak grouped the signed positions, retained the desk with a zero total and produced the two requested columns. Practised distinguishing a grouping column from one of its values, renaming a column and moving the group labels from the result index into a column. Discussed group counts and other aggregations. Independent recall remains to be checked.
-- **Verification.** Both exercises currently reside in the first local drill notebook. A fresh Python run confirmed the list and desk summary. A subsequent exploratory print calls `get_group` on the aggregated DataFrame and raises `AttributeError`. Both answers are computed correctly before that line. This distinction between a GroupBy object and its aggregated result is a useful point to revisit in Drill 3.
+- **Verification.** Both exercises currently reside in the first local drill notebook. Zak replaced the exploratory `get_group` call with a print of the aggregated desk summary. All saved code cells ran successfully in a fresh Python process. Checks confirmed the breach list in input order, the two requested column names and all three desk totals. Revisit the distinction between a GroupBy object and its aggregated result in Drill 3.
 
 ## Training direction
 
