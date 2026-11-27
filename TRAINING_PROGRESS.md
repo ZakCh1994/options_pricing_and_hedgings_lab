@@ -4,11 +4,11 @@ Last updated: 27 November 2026.
 
 ## Current focus and next step
 
-**Current position.** Project 5, the bond book under a yield curve twist, is in progress. The three base prices are independently verified, and the refactored base valuation passed a 2,000-bond stress test. The notebook now displays a per-bond price change alongside both prices and signed units. Point 2 still needs corrected shocked prices, signed position P&L and a book total. Project 4 was completed as guided practice on 24 November.
+**Current position.** Project 5, the bond book under a yield curve twist, is in progress. The three base prices are independently verified, and the refactored base valuation passed a 2,000-bond stress test. The notebook now calculates signed position P&L from the draft prices. Point 2 still needs corrected shocked prices and a book total. Project 4 was completed as guided practice on 24 November.
 
 **Next drill session, 27 November.** Start Drill 3 with one short, unseen pandas task that revisits grouping and aggregation on different data. Give the prompt in plain English, allow an unaided attempt and review the saved answer in Zak’s local drill notebook.
 
-**Next bond-case step.** Trace the units of B01's base quote, shock and pricer input. Correct the shock conversion and rerun the single-payment check. Then use B03 to check how a price rise affects a short position before calculating the book total.
+**Next bond-case step.** Trace the units of B01's base quote, shock and pricer input. Correct the shock conversion and rerun the single-payment check, then report the book total using the verified prices and signed quantities.
 
 **Project 3 continuity:** multi-period European call/put pricers and benchmark/parity assertions remain in `notebooks/03_binomial_replication.ipynb`. The proposed next step is still a shared payoff-driven pricing engine, followed by input validation and boundary cases. Fixed-maturity trees, convergence and American exercise remain unimplemented.
 
@@ -258,12 +258,12 @@ On 24 November all saved Project 4 code cells were executed sequentially in a fr
 - Replaced the per-date concatenation of two growing Series with a list of dictionaries, one per missing payment year. The lookup DataFrame is built once with named columns. Keeping those columns when the lookup has zero rows lets the same merge work when every date is already quoted.
 - Added `validate="many_to_one"` to the initial curve merge. Repeated payment dates on the cash-flow side are valid, and a duplicate maturity quote now raises a `MergeError` before it can multiply a cash-flow row. Added a range guard before interpolation. It combines two Boolean Series with `|` and uses `.any()` to raise a `ValueError` for dates below or above the quoted range. The bounds themselves are valid.
 - Reused `bond_prices` in a second loop over bond groups to create a draft shocked-price table. Chained two left merges with `validate="one_to_one"` to join prices and signed positions by `bond_id`. Selected the output columns in the order `bond_id`, `signed_units`, `price`, `shock_price` using a list of names. Discussed outer parentheses for wrapping method chains and the difference between wrapping f-strings in source code and adding line breaks to printed output.
-- Added `.assign()` to the merge chain and included the new `PnL` column in the displayed table. Practised passing a lambda to `.assign()` and distinguishing pandas index alignment from matching on `bond_id`. The lambda receives the merged table and currently reads the base price from a separate DataFrame. The subtraction works on the case data because the indexes line up. Both price columns are already available in the merged table.
+- Added `.assign()` to the merge chain and included the new `PnL` column in the displayed table. Updated the calculation to multiply the price change by `signed_units`. Practised passing a lambda to `.assign()` and distinguishing pandas index alignment from matching on `bond_id`. The lambda receives the merged table and currently reads the base price from a separate DataFrame. The subtraction works on the case data because the indexes line up. Both price columns are already available in the merged table.
 
 **Still open.**
 
 1. Correct the units in the draft shocked pricing. The current expression adds a shock converted to decimal rate units to a base quote still in percentage units. The pricer then divides the combined value by 100. Complete the brief's pricer interface so it takes a bond's cash-flow schedule and a curve directly, then verify both valuations. The current helper takes three Series with the rates already matched to payment dates.
-2. Finish point 2 after correcting the shocked prices. The displayed `PnL` currently gives the change in price per bond. It still needs to account for `signed_units`, and the notebook has yet to report total book P&L in euros.
+2. Finish point 2 after correcting the shocked prices. Signed position P&L is implemented and checked against the draft prices. Report total book P&L in euros once the shocked valuation checks out.
 3. Add the independently known pricing check to the notebook and add the zero-shock book P&L check.
 4. Write the two- or three-sentence Treasury explanation of the largest loss, using the rate moves and the position sign. No unaided attempt timing has been recorded.
 
@@ -273,7 +273,7 @@ On 24 November all saved Project 4 code cells were executed sequentially in a fr
 
 **Verification, 27 November 2026.** All saved code cells ran sequentially in a fresh Python process. The merged table had one row per bond, the expected column order, the correct signed quantities and all three previously verified base prices. The independent B01 shocked-price check failed. The draft gives EUR 97.529041 per bond, which corresponds to a 2.502% rate. The 20 basis-point shock implies 2.700% and a benchmark price of EUR 97.336124. This check ran outside the notebook.
 
-**Point 2 follow-up, 27 November 2026.** A fresh Python process ran all saved code cells and confirmed that the displayed column equals shocked price minus base price for each of the three bonds. B03 illustrates the remaining sign check. Its price rises while its signed quantity is negative. B01 still implies 2.502% under the draft shock calculation. These checks ran outside the notebook.
+**Point 2 follow-up, 27 November 2026.** After Zak added `signed_units`, all saved code cells ran in a fresh Python process. Checks against the displayed prices and input quantities confirmed signed P&L for all three bonds. B03's price rise now gives a loss for the short position. B01 still implies 2.502% under the draft shock calculation, and the notebook has no book total yet. These checks ran outside the notebook.
 
 ## Environment, verification and repository history
 
